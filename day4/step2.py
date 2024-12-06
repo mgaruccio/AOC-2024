@@ -34,8 +34,6 @@ def search_around(wordsearch, row, column, value):
             continue
         char = wordsearch[row + offset[0]][column + offset[1]]
         if char == value:
-            if row + offset[0] == 0 or column + offset[1] == 0:
-                print(row, column, offset)
             matched_characters.append(
                 {
                     "position": (row + offset[0], column + offset[1]),
@@ -72,7 +70,12 @@ def main():
                 matched_characters_m = search_around(wordsearch, x, y, "M")
                 if len(matched_characters_m) != 2:
                     continue
-                matched_characters_s = search_around(wordsearch, x, y, "S")
+                matched_characters_s = []
+                for m_character in matched_characters_m:
+                    offset = [x * -1 for x in m_character["offset"]]
+                    test = search_direction(wordsearch, x, y, "S", offset)
+                    if test:
+                        matched_characters_s.append(test)
                 if len(matched_characters_s) != 2:
                     continue
                 matches.append(
