@@ -10,21 +10,38 @@ def read_input(filename):
         return f.read().splitlines()
 
 
+def concat(x, y):
+    return int(f"{x}{y}")
+
+
+def calculate_next(current_value, next_value, ops):
+    # return [op(current_value, next_value) for op in ops]
+    vals = []
+    for op in ops:
+        new_val = op(current_value, next_value)
+        vals.append(new_val)
+    return vals
+
+
+def get_potential_values(inputs):
+    values = [inputs.pop(0)]
+    while len(inputs) > 0:
+        i = inputs.pop(0)
+        new_vals = []
+        for value in values:
+            new_values = calculate_next(value, i, OPERATORS)
+            new_vals.extend(new_values)
+        values = new_vals
+    return values
+
+
 OPERATORS = [operator.add, operator.mul]
-
-
-def process_ops(args):
-    ops, case = args
-    i = None
-    for x, op in enumerate(ops):
-        values = case["inputs"]
-        i = op((i if i else values[x]), values[x + 1])
-    return i
 
 
 def main():
     lines = read_input("day7/input.txt")
     cases = []
+    final_results = []
     for line in lines:
         split_line = line.split(":")
         cases.append(
@@ -34,44 +51,14 @@ def main():
             }
         )
 
-    final_results = 0
-    case_count = len(cases)
-    for x, case in enumerate(cases):
-        print(f"Case {x + 1 } of {case_count}")
-        ## Generates all possible comibations of operators
-        opsets = itertools.combinations_with_replacement(
-            OPERATORS, len(case["inputs"]) - 1
-        )
-        j = 0
-        for opset in opsets:
-
-            print(f"opset {j}")
-            j += 1
-            ## loops through all possible permutations of the operator set
-            ## ends as soon as a valid result is found
-            solved = False
-            work_items = [(ops, case) for ops in set(itertools.permutations(opset))]
-            ## not clear if this is working or not, I'm only seeing a single python process and it's only using one core
-            with Pool(processes=10) as pool:
-                results = pool.map(process_ops, work_items)
-            for r in results:
-                if r == case["test_case"]:
-                    final_results += r
-                    solved = True
-                    break
-            if solved:
-                break
-
-            # for ops in set(itertools.permutations(opset)):
-            #     print(f"permutation {k}")
-            #     i = process_ops(ops, case)
-            #     if i == int(case["test_case"]):
-            #         results.append(case["test_case"])
-            #         break
+    for case in cases:
+        values = get_potential_values(case["inputs"])
+        if case["test_case"] in values:
+            final_results.append(case["test_case"])
 
     print(final_results)
+    print(sum(final_results))
 
 
 if __name__ == "__main__":
-    freeze_support()
     main()
